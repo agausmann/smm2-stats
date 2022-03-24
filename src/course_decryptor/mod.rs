@@ -31,6 +31,7 @@ pub fn decrypt_course_data(input: &[u8]) -> Vec<u8> {
 
     let iv = &end[..0x10];
     let key_seed = &end[0x10..0x20];
+    //TODO proper endianness conversions instead of bytemuck
     let key = gen_key(
         COURSE_KEY_TABLE,
         &mut Random::new(*bytemuck::from_bytes(key_seed)),
