@@ -12,24 +12,24 @@ pub struct LevelHeader {
     pub start_y: u8,
     pub goal_y: u8,
     pub goal_x: i16,
-    pub timer: i16,
-    pub clear_ca: i16,
-    pub date_year: i16,
-    pub date_mon: i8,
-    pub date_day: i8,
-    pub date_hour: i8,
-    pub date_minute: i8,
+    pub timer: u16,
+    pub clear_ca: u16,
+    pub date_year: u16,
+    pub date_mon: u8,
+    pub date_day: u8,
+    pub date_hour: u8,
+    pub date_minute: u8,
     pub autoscroll_speed: u8,
     pub clear_cc: u8,
-    pub clear_crc: i32,
-    pub game_version: i32,
-    pub m_flag: i32,
-    pub clear_attempts: i32,
-    pub clear_time: i32,
+    pub clear_crc: u32,
+    pub game_version: u32,
+    pub m_flag: u32,
+    pub clear_attempts: u32,
+    pub clear_time: u32,
     pub creation_id: u32,
-    pub upload_id: i64,
-    pub clear_version: i32,
-    pub game_style: i16,
+    pub upload_id: u64,
+    pub clear_version: u32,
+    pub game_style: u16,
     pub name: String,
     pub description: String,
 }
@@ -41,26 +41,26 @@ impl LevelHeader {
         let start_y = reader.read_u8()?;
         let goal_y = reader.read_u8()?;
         let goal_x = reader.read_i16()?;
-        let timer = reader.read_i16()?;
-        let clear_ca = reader.read_i16()?;
-        let date_year = reader.read_i16()?;
-        let date_mon = reader.read_i8()?;
-        let date_day = reader.read_i8()?;
-        let date_hour = reader.read_i8()?;
-        let date_minute = reader.read_i8()?;
+        let timer = reader.read_u16()?;
+        let clear_ca = reader.read_u16()?;
+        let date_year = reader.read_u16()?;
+        let date_mon = reader.read_u8()?;
+        let date_day = reader.read_u8()?;
+        let date_hour = reader.read_u8()?;
+        let date_minute = reader.read_u8()?;
         let autoscroll_speed = reader.read_u8()?;
         let clear_cc = reader.read_u8()?;
-        let clear_crc = reader.read_i32()?;
-        let game_version = reader.read_i32()?;
-        let m_flag = reader.read_i32()?;
-        let clear_attempts = reader.read_i32()?;
-        let clear_time = reader.read_i32()?;
+        let clear_crc = reader.read_u32()?;
+        let game_version = reader.read_u32()?;
+        let m_flag = reader.read_u32()?;
+        let clear_attempts = reader.read_u32()?;
+        let clear_time = reader.read_u32()?;
         let creation_id = reader.read_u32()?;
-        let upload_id = reader.read_i64()?;
-        let clear_version = reader.read_i32()?;
+        let upload_id = reader.read_u64()?;
+        let clear_version = reader.read_u32()?;
 
         reader.seek(SeekFrom::Start(start + 0xf1))?;
-        let game_style = reader.read_i16()?;
+        let game_style = reader.read_u16()?;
 
         let name = reader.read_wcstring()?;
         let description = reader.read_wcstring()?;
@@ -102,21 +102,21 @@ pub struct MapHeader {
     pub liq_mode: u8,
     pub liq_speed: u8,
     pub liq_s_height: u8,
-    pub b_or_r: i32,
-    pub b_or_t: i32,
-    pub b_or_l: i32,
-    pub b_or_b: i32,
-    pub flag: i32,
-    pub object_count: i32,
-    pub sound_count: i32,
-    pub snake_count: i32,
-    pub clear_pipe_count: i32,
-    pub creeper_count: i32,
-    pub iblk_count: i32,
-    pub track_block_count: i32,
-    pub ground_count: i32,
-    pub track_count: i32,
-    pub ice_count: i32,
+    pub b_or_r: u32,
+    pub b_or_t: u32,
+    pub b_or_l: u32,
+    pub b_or_b: u32,
+    pub flag: u32,
+    pub object_count: u32,
+    pub sound_count: u32,
+    pub snake_count: u32,
+    pub clear_pipe_count: u32,
+    pub creeper_count: u32,
+    pub iblk_count: u32,
+    pub track_block_count: u32,
+    pub ground_count: u32,
+    pub track_count: u32,
+    pub ice_count: u32,
 }
 
 impl MapHeader {
@@ -129,21 +129,21 @@ impl MapHeader {
         let liq_mode = reader.read_u8()?;
         let liq_speed = reader.read_u8()?;
         let liq_s_height = reader.read_u8()?;
-        let b_or_r = reader.read_i32()?;
-        let b_or_t = reader.read_i32()?;
-        let b_or_l = reader.read_i32()?;
-        let b_or_b = reader.read_i32()?;
-        let flag = reader.read_i32()?;
-        let object_count = reader.read_i32()?;
-        let sound_count = reader.read_i32()?;
-        let snake_count = reader.read_i32()?;
-        let clear_pipe_count = reader.read_i32()?;
-        let creeper_count = reader.read_i32()?;
-        let iblk_count = reader.read_i32()?;
-        let track_block_count = reader.read_i32()?;
-        let ground_count = reader.read_i32()?;
-        let track_count = reader.read_i32()?;
-        let ice_count = reader.read_i32()?;
+        let b_or_r = reader.read_u32()?;
+        let b_or_t = reader.read_u32()?;
+        let b_or_l = reader.read_u32()?;
+        let b_or_b = reader.read_u32()?;
+        let flag = reader.read_u32()?;
+        let object_count = reader.read_u32()?;
+        let sound_count = reader.read_u32()?;
+        let snake_count = reader.read_u32()?;
+        let clear_pipe_count = reader.read_u32()?;
+        let creeper_count = reader.read_u32()?;
+        let iblk_count = reader.read_u32()?;
+        let track_block_count = reader.read_u32()?;
+        let ground_count = reader.read_u32()?;
+        let track_count = reader.read_u32()?;
+        let ice_count = reader.read_u32()?;
 
         Ok(Self {
             theme,
@@ -427,7 +427,7 @@ impl MapMoveBlockNode {
 
 pub struct MapMoveBlock {
     pub index: u8,
-    pub node_count: i16,
+    pub node_count: u16,
     pub nodes: Vec<MapMoveBlockNode>,
 }
 
@@ -435,7 +435,7 @@ impl MapMoveBlock {
     fn parse<R: Read + Seek>(reader: &mut R) -> io::Result<Self> {
         let start = reader.stream_position()?;
         let index = reader.read_u8()?;
-        let node_count = reader.read_i16()?;
+        let node_count = reader.read_u16()?;
         let mut nodes = Vec::with_capacity(node_count as usize);
         for i in 0..node_count as u64 {
             reader.seek(SeekFrom::Start(start + 0x4 - 0x1 + 0x4 * i))?;
@@ -452,7 +452,7 @@ impl MapMoveBlock {
 
 pub struct MapCreeper {
     pub index: u8,
-    pub node_count: i16,
+    pub node_count: u16,
     pub nodes: Vec<u8>,
 }
 
@@ -460,7 +460,7 @@ impl MapCreeper {
     fn parse<R: Read + Seek>(reader: &mut R) -> io::Result<Self> {
         let start = reader.stream_position()?;
         let index = reader.read_u8()?;
-        let node_count = reader.read_i16()?;
+        let node_count = reader.read_u16()?;
         let mut nodes = Vec::with_capacity(node_count as usize);
         for i in 0..node_count as u64 {
             reader.seek(SeekFrom::Start(start + 0x4 + 0x4 * i))?;
@@ -528,8 +528,8 @@ pub struct Map {
     pub clear_pipes: Vec<MapClearPipe>,
     pub snake_blocks: Vec<MapSnakeBlock>,
     pub track_y_points: Vec<Point>,
-    pub track_nodes: Vec<Vec<i32>>,
-    pub ground_nodes: Vec<Vec<i32>>,
+    pub track_nodes: Vec<Vec<u32>>,
+    pub ground_nodes: Vec<Vec<u32>>,
     pub move_blocks: Vec<MapMoveBlock>,
     pub track_blocks: Vec<MapMoveBlock>,
     pub creepers: Vec<MapCreeper>,
