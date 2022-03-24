@@ -62,7 +62,9 @@ impl LevelHeader {
         reader.seek(SeekFrom::Start(start + 0xf1))?;
         let game_style = reader.read_u16()?;
 
+        reader.seek(SeekFrom::Start(start + 0xf3))?;
         let name = reader.read_wcstring()?;
+        reader.seek(SeekFrom::Start(start + 0x135))?;
         let description = reader.read_wcstring()?;
 
         Ok(Self {
@@ -121,6 +123,7 @@ pub struct MapHeader {
 
 impl MapHeader {
     fn parse<R: Read + Seek>(reader: &mut R) -> io::Result<Self> {
+        let start = reader.stream_position()?;
         let theme = reader.read_u8()?;
         let autoscroll_type = reader.read_u8()?;
         let bor_flag = reader.read_u8()?;
@@ -141,6 +144,7 @@ impl MapHeader {
         let creeper_count = reader.read_u32()?;
         let iblk_count = reader.read_u32()?;
         let track_block_count = reader.read_u32()?;
+        reader.seek(SeekFrom::Start(start + 0x3c))?;
         let ground_count = reader.read_u32()?;
         let track_count = reader.read_u32()?;
         let ice_count = reader.read_u32()?;
@@ -552,7 +556,7 @@ impl Map {
 
         let mut objects = Vec::with_capacity(map_header.object_count as usize);
         for i in 0..map_header.object_count as u64 {
-            reader.seek(SeekFrom::Start(start + 0x20 * i))?;
+            reader.seek(SeekFrom::Start(start + 0x48 + 0x20 * i))?;
             objects.push(MapObject::parse(reader)?);
         }
         //TODO sort objects (not super important)
