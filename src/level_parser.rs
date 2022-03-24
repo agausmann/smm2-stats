@@ -62,9 +62,9 @@ impl LevelHeader {
         reader.seek(SeekFrom::Start(start + 0xf1))?;
         let game_style = reader.read_u16()?;
 
-        reader.seek(SeekFrom::Start(start + 0xf3))?;
+        reader.seek(SeekFrom::Start(start + 0xf3 + 1))?;
         let name = reader.read_wcstring()?;
-        reader.seek(SeekFrom::Start(start + 0x135))?;
+        reader.seek(SeekFrom::Start(start + 0x135 + 1))?;
         let description = reader.read_wcstring()?;
 
         Ok(Self {
