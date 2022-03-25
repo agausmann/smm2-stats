@@ -2,6 +2,54 @@ use std::io::{self, Read, Seek, SeekFrom};
 
 use byteorder::LittleEndian;
 
+trait ReadExt: Read {
+    fn read_u8(&mut self) -> io::Result<u8> {
+        <Self as byteorder::ReadBytesExt>::read_u8(self)
+    }
+
+    fn read_i8(&mut self) -> io::Result<i8> {
+        <Self as byteorder::ReadBytesExt>::read_i8(self)
+    }
+
+    fn read_u16(&mut self) -> io::Result<u16> {
+        <Self as byteorder::ReadBytesExt>::read_u16::<LittleEndian>(self)
+    }
+
+    fn read_i16(&mut self) -> io::Result<i16> {
+        <Self as byteorder::ReadBytesExt>::read_i16::<LittleEndian>(self)
+    }
+
+    fn read_u32(&mut self) -> io::Result<u32> {
+        <Self as byteorder::ReadBytesExt>::read_u32::<LittleEndian>(self)
+    }
+
+    fn read_i32(&mut self) -> io::Result<i32> {
+        <Self as byteorder::ReadBytesExt>::read_i32::<LittleEndian>(self)
+    }
+
+    fn read_u64(&mut self) -> io::Result<u64> {
+        <Self as byteorder::ReadBytesExt>::read_u64::<LittleEndian>(self)
+    }
+
+    fn read_i64(&mut self) -> io::Result<i64> {
+        <Self as byteorder::ReadBytesExt>::read_i64::<LittleEndian>(self)
+    }
+
+    fn read_wcstring(&mut self) -> io::Result<String> {
+        let mut buffer = Vec::new();
+        loop {
+            let x = self.read_u16()?;
+            if x == 0 {
+                break;
+            }
+            buffer.push(x);
+        }
+        Ok(String::from_utf16_lossy(&buffer))
+    }
+}
+
+impl<R: Read> ReadExt for R {}
+
 pub struct Point {
     pub is_empty: bool,
     pub x: i32,
@@ -721,51 +769,210 @@ impl Map {
         })
     }
 }
-
-trait ReadExt: Read {
-    fn read_u8(&mut self) -> io::Result<u8> {
-        <Self as byteorder::ReadBytesExt>::read_u8(self)
-    }
-
-    fn read_i8(&mut self) -> io::Result<i8> {
-        <Self as byteorder::ReadBytesExt>::read_i8(self)
-    }
-
-    fn read_u16(&mut self) -> io::Result<u16> {
-        <Self as byteorder::ReadBytesExt>::read_u16::<LittleEndian>(self)
-    }
-
-    fn read_i16(&mut self) -> io::Result<i16> {
-        <Self as byteorder::ReadBytesExt>::read_i16::<LittleEndian>(self)
-    }
-
-    fn read_u32(&mut self) -> io::Result<u32> {
-        <Self as byteorder::ReadBytesExt>::read_u32::<LittleEndian>(self)
-    }
-
-    fn read_i32(&mut self) -> io::Result<i32> {
-        <Self as byteorder::ReadBytesExt>::read_i32::<LittleEndian>(self)
-    }
-
-    fn read_u64(&mut self) -> io::Result<u64> {
-        <Self as byteorder::ReadBytesExt>::read_u64::<LittleEndian>(self)
-    }
-
-    fn read_i64(&mut self) -> io::Result<i64> {
-        <Self as byteorder::ReadBytesExt>::read_i64::<LittleEndian>(self)
-    }
-
-    fn read_wcstring(&mut self) -> io::Result<String> {
-        let mut buffer = Vec::new();
-        loop {
-            let x = self.read_u16()?;
-            if x == 0 {
-                break;
-            }
-            buffer.push(x);
-        }
-        Ok(String::from_utf16_lossy(&buffer))
+pub fn num_to_game_style(x: u16) -> Option<&'static str> {
+    match x {
+        12621 => Some("SMB1"),
+        13133 => Some("SMB3"),
+        22349 => Some("SMW"),
+        21847 => Some("NSMBU"),
+        22323 => Some("SM3DW"),
+        _ => None,
     }
 }
 
-impl<R: Read> ReadExt for R {}
+pub fn num_to_clear_condition_category(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("None"),
+        1 => Some("Parts"),
+        2 => Some("Status"),
+        3 => Some("Actions"),
+        _ => None,
+    }
+}
+
+pub fn num_to_game_version(x: u32) -> Option<&'static str> {
+    match x {
+        0 => Some("1.0.0"),
+        1 => Some("1.0.1"),
+        2 => Some("1.1.0"),
+        3 => Some("2.0.0"),
+        4 => Some("3.0.0"),
+        5 => Some("3.0.1"),
+        33 => Some("What"),
+        _ => None,
+    }
+}
+
+pub fn num_to_clear_condition(x: u32) -> Option<&'static str> {
+    match x {
+        0 => Some("None"),
+        137525990 => Some("Reach the goal without landing after leaving the ground."),
+        199585683 => Some("Reach the goal after defeating at least/all {} Mechakoopa(s)."),
+        272349836 => Some("Reach the goal after defeating at least/all {} Cheep Cheep(s)."),
+        375673178 => Some("Reach the goal without taking damage."),
+        426197923 => Some("Reach the goal as Boomerang Mario."),
+        436833616 => Some("Reach the goal while wearing a Shoe."),
+        713979835 => Some("Reach the goal as Fire Mario."),
+        744927294 => Some("Reach the goal as Frog Mario."),
+        751004331 => Some("Reach the goal after defeating at least/all {} Larry(s)."),
+        900050759 => Some("Reach the goal as Raccoon Mario."),
+        947659466 => Some("Reach the goal after defeating at least/all {} Blooper(s)."),
+        976173462 => Some("Reach the goal as Propeller Mario."),
+        994686866 => Some("Reach the goal while wearing a Propeller Box."),
+        998904081 => Some("Reach the goal after defeating at least/all {} Spike(s)."),
+        1008094897 => Some("Reach the goal after defeating at least/all {} Boom Boom(s)."),
+        1051433633 => Some("Reach the goal while holding a Koopa Shell."),
+        1061233896 => Some("Reach the goal after defeating at least/all {} Porcupuffer(s)."),
+        1062253843 => Some("Reach the goal after defeating at least/all {} Charvaargh(s)."),
+        1079889509 => Some("Reach the goal after defeating at least/all {} Bullet Bill(s)."),
+        1080535886 => Some("Reach the goal after defeating at least/all {} Bully/Bullies."),
+        1151250770 => Some("Reach the goal while wearing a Goomba Mask."),
+        1182464856 => Some("Reach the goal after defeating at least/all {} Hop-Chops."),
+        1219761531 => Some(
+            "Reach the goal while holding a Red POW Block. OR Reach the goal after activating at least/all {} Red POW Block(s)."),
+        1221661152 => Some("Reach the goal after defeating at least/all {} Bob-omb(s)."),
+        1259427138 => Some("Reach the goal after defeating at least/all {} Spiny/Spinies."),
+        1268255615 => Some("Reach the goal after defeating at least/all {} Bowser(s)/Meowser(s)."),
+        1279580818 => Some("Reach the goal after defeating at least/all {} Ant Trooper(s)."),
+        1283945123 => Some("Reach the goal on a Lakitu's Cloud."),
+        1344044032 => Some("Reach the goal after defeating at least/all {} Boo(s)."),
+        1425973877 => Some("Reach the goal after defeating at least/all {} Roy(s)."),
+        1429902736 => Some("Reach the goal while holding a Trampoline."),
+        1431944825 => Some("Reach the goal after defeating at least/all {} Morton(s)."),
+        1446467058 => Some("Reach the goal after defeating at least/all {} Fish Bone(s)."),
+        1510495760 => Some("Reach the goal after defeating at least/all {} Monty Mole(s)."),
+        1656179347 => Some("Reach the goal after picking up at least/all {} 1-Up Mushroom(s)."),
+        1665820273 => Some("Reach the goal after defeating at least/all {} Hammer Bro(s.)."),
+        1676924210 => Some(
+            "Reach the goal after hitting at least/all {} P Switch(es). OR Reach the goal while holding a P Switch."),
+        1715960804 => Some(
+            "Reach the goal after activating at least/all {} POW Block(s). OR Reach the goal while holding a POW Block."),
+        1724036958 => Some("Reach the goal after defeating at least/all {} Angry Sun(s)."),
+        1730095541 => Some("Reach the goal after defeating at least/all {} Pokey(s)."),
+        1780278293 => Some("Reach the goal as Superball Mario."),
+        1839897151 => Some("Reach the goal after defeating at least/all {} Pom Pom(s)."),
+        1969299694 => Some("Reach the goal after defeating at least/all {} Peepa(s)."),
+        2035052211 => Some("Reach the goal after defeating at least/all {} Lakitu(s)."),
+        2038503215 => Some("Reach the goal after defeating at least/all {} Lemmy(s)."),
+        2048033177 => Some("Reach the goal after defeating at least/all {} Lava Bubble(s)."),
+        2076496776 => Some("Reach the goal while wearing a Bullet Bill Mask."),
+        2089161429 => Some("Reach the goal as Big Mario."),
+        2111528319 => Some("Reach the goal as Cat Mario."),
+        2131209407 => Some("Reach the goal after defeating at least/all {} Goomba(s)/Galoomba(s)."),
+        2139645066 => Some("Reach the goal after defeating at least/all {} Thwomp(s)."),
+        2259346429 => Some("Reach the goal after defeating at least/all {} Iggy(s)."),
+        2549654281 => Some("Reach the goal while wearing a Dry Bones Shell."),
+        2694559007 => Some("Reach the goal after defeating at least/all {} Sledge Bro(s.)."),
+        2746139466 => Some("Reach the goal after defeating at least/all {} Rocky Wrench(es)."),
+        2749601092 => Some("Reach the goal after grabbing at least/all {} 50-Coin(s)."),
+        2855236681 => Some("Reach the goal as Flying Squirrel Mario."),
+        3036298571 => Some("Reach the goal as Buzzy Mario."),
+        3074433106 => Some("Reach the goal as Builder Mario."),
+        3146932243 => Some("Reach the goal as Cape Mario."),
+        3174413484 => Some("Reach the goal after defeating at least/all {} Wendy(s)."),
+        3206222275 => Some("Reach the goal while wearing a Cannon Box."),
+        3314955857 => Some("Reach the goal as Link."),
+        3342591980 => Some("Reach the goal while you have Super Star invincibility."),
+        3346433512 => Some("Reach the goal after defeating at least/all {} Goombrat(s)/Goombud(s)."),
+        3348058176 => Some("Reach the goal after grabbing at least/all {} 10-Coin(s)."),
+        3353006607 => Some("Reach the goal after defeating at least/all {} Buzzy Beetle(s)."),
+        3392229961 => Some("Reach the goal after defeating at least/all {} Bowser Jr.(s)."),
+        3437308486 => Some("Reach the goal after defeating at least/all {} Koopa Troopa(s)."),
+        3459144213 => Some("Reach the goal after defeating at least/all {} Chain Chomp(s)."),
+        3466227835 => Some("Reach the goal after defeating at least/all {} Muncher(s)."),
+        3481362698 => Some("Reach the goal after defeating at least/all {} Wiggler(s)."),
+        3513732174 => Some("Reach the goal as SMB2 Mario."),
+        3649647177 => Some("Reach the goal in a Koopa Clown Car/Junior Clown Car."),
+        3725246406 => Some("Reach the goal as Spiny Mario."),
+        3730243509 => Some("Reach the goal in a Koopa Troopa Car."),
+        3748075486 => Some("Reach the goal after defeating at least/all {} Piranha Plant(s)/Jumping Piranha Plant(s)."),
+        3797704544 => Some("Reach the goal after defeating at least/all {} Dry Bones."),
+        3824561269 => Some("Reach the goal after defeating at least/all {} Stingby/Stingbies."),
+        3833342952 => Some("Reach the goal after defeating at least/all {} Piranha Creeper(s)."),
+        3842179831 => Some("Reach the goal after defeating at least/all {} Fire Piranha Plant(s)."),
+        3874680510 => Some("Reach the goal after breaking at least/all {} Crates(s)."),
+        3974581191 => Some("Reach the goal after defeating at least/all {} Ludwig(s)."),
+        3977257962 => Some("Reach the goal as Super Mario."),
+        4042480826 => Some("Reach the goal after defeating at least/all {} Skipsqueak(s)."),
+        4116396131 => Some("Reach the goal after grabbing at least/all {} Coin(s)."),
+        4117878280 => Some("Reach the goal after defeating at least/all {} Magikoopa(s)."),
+        4122555074 => Some("Reach the goal after grabbing at least/all {} 30-Coin(s)."),
+        4153835197 => Some("Reach the goal as Balloon Mario."),
+        4172105156 => Some("Reach the goal while wearing a Red POW Box."),
+        4209535561 => Some("Reach the Goal while riding Yoshi."),
+        4269094462 => Some("Reach the goal after defeating at least/all {} Spike Top(s)."),
+        4293354249 => Some("Reach the goal after defeating at least/all {} Banzai Bill(s)."),
+        _ => None,
+    }
+}
+
+pub fn num_to_theme(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("Overworld"),
+        1 => Some("Underground"),
+        2 => Some("Castle"),
+        3 => Some("Airship"),
+        4 => Some("Underwater"),
+        5 => Some("Ghost house"),
+        6 => Some("Snow"),
+        7 => Some("Desert"),
+        8 => Some("Sky"),
+        9 => Some("Forest"),
+        _ => None,
+    }
+}
+
+pub fn num_to_autoscroll_speed(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("x1"),
+        1 => Some("x2"),
+        2 => Some("x3"),
+        _ => None,
+    }
+}
+
+pub fn num_to_autoscroll_type(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("None"),
+        1 => Some("Slow"),
+        2 => Some("Normal"),
+        3 => Some("Fast"),
+        4 => Some("Custom"),
+        _ => None,
+    }
+}
+
+pub fn num_to_boundary_type(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("Built Above Line"),
+        1 => Some("Built Below Line"),
+        _ => None,
+    }
+}
+
+pub fn num_to_orientation(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("Horizontal"),
+        1 => Some("Vertical"),
+        _ => None,
+    }
+}
+
+pub fn num_to_liquid_mode(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("Static"),
+        1 => Some("Rising or Falling"),
+        2 => Some("Rising and Falling"),
+        _ => None,
+    }
+}
+
+pub fn num_to_liquid_speed(x: u8) -> Option<&'static str> {
+    match x {
+        0 => Some("None"),
+        1 => Some("x1"),
+        2 => Some("x2"),
+        3 => Some("x3"),
+        _ => None,
+    }
+}
