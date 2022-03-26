@@ -1090,9 +1090,14 @@ fn num_to_name(id: i16, flag: u32, game_style: u16) -> Option<&'static str> {
         44 => match game_style {
             GAME_STYLE_SMB1 => Some("Big Mushroom"),
             GAME_STYLE_SMB3 => Some("Super Leaf"),
+            GAME_STYLE_SMW => Some("Cape Feather"),
             _ => None,
         },
-        45 => Some("Shoe Goomba"),
+        45 => match game_style {
+            GAME_STYLE_SMB1 | GAME_STYLE_SMB3 => Some("Shoe Goomba"),
+            GAME_STYLE_SMW => Some("Yoshi"),
+            _ => None,
+        },
         46 => Some("Dry Bones"),
         47 => Some("Cannon"),
         48 => Some("Blooper"),
@@ -1134,6 +1139,7 @@ fn num_to_name(id: i16, flag: u32, game_style: u16) -> Option<&'static str> {
         81 => match game_style {
             GAME_STYLE_SMB1 => Some("SMB2 Mushroom"),
             GAME_STYLE_SMB3 => Some("Frog Suit"),
+            GAME_STYLE_SMW => Some("Power Balloon"),
             _ => None,
         },
         82 => Some("Bumper"),
