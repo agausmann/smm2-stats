@@ -272,14 +272,15 @@ impl MapHeader {
     }
 }
 
+#[derive(Debug)]
 pub struct MapObject {
     pub x: i32,
     pub y: i32,
     pub w: u8,
     pub h: u8,
-    pub flag: i32,
-    pub cflag: i32,
-    pub ex: i32,
+    pub flag: u32,
+    pub cflag: u32,
+    pub ex: u32,
     pub id: i16,
     pub cid: i16,
     pub lid: i16,
@@ -295,9 +296,9 @@ impl MapObject {
         reader.seek(SeekFrom::Start(start + 0xa))?;
         let w = reader.read_u8()?;
         let h = reader.read_u8()?;
-        let flag = reader.read_i32()?;
-        let cflag = reader.read_i32()?;
-        let ex = reader.read_i32()?;
+        let flag = reader.read_u32()?;
+        let cflag = reader.read_u32()?;
+        let ex = reader.read_u32()?;
         let id = reader.read_i16()?;
         let cid = reader.read_i16()?;
         let lid = reader.read_i16()?;
@@ -320,7 +321,11 @@ impl MapObject {
     }
 
     pub fn name(&self) -> Option<&'static str> {
-        OBJ_ENG.get(self.id as usize).copied()
+        match self.id {
+            DOOR_ID if (self.flag & FLAG_IS_KEY_DOOR) != 0 => Some("Key Door"),
+            DOOR_ID if (self.flag & FLAG_IS_P_DOOR) != 0 => Some("P Door"),
+            _ => OBJ_ENG.get(self.id as usize).copied(),
+        }
     }
 }
 
@@ -1032,7 +1037,7 @@ fn num_to_liquid_speed(x: u8) -> Option<&'static str> {
 const OBJ_ENG: &[&str] = &[
     "Goomba",
     "Koopa",
-    "Piranha Flower",
+    "Piranha Plant",
     "Hammer Bro",
     "Block",
     "? Block",
@@ -1110,7 +1115,7 @@ const OBJ_ENG: &[&str] = &[
     "Boom Boom",
     "Pokey",
     "P Block",
-    "Sprint Platform",
+    "Dash Block",
     "SMB2 Mushroom",
     "Donut",
     "Skewer",
@@ -1144,7 +1149,7 @@ const OBJ_ENG: &[&str] = &[
     "Mechakoopa",
     "Crate",
     "Mushroom Trampoline",
-    "Porkupuffer",
+    "Porcupuffer",
     "Cinobic",
     "Super Hammer",
     "Bully",
@@ -1164,3 +1169,7 @@ const OBJ_ENG: &[&str] = &[
     "Red POW Box",
     "ON/OFF Trampoline",
 ];
+
+const DOOR_ID: i16 = 55;
+const FLAG_IS_P_DOOR: u32 = 0x0004_0000;
+const FLAG_IS_KEY_DOOR: u32 = 0x0008_0000;
