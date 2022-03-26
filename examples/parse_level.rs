@@ -19,20 +19,24 @@ fn main() {
     println!("Overworld objects: {}", level.overworld.objects.len());
     for obj in &level.overworld.objects {
         println!(
-            "    {},{}: {}",
+            "    {},{}: {} {} {:#x}",
             obj.x,
             obj.y,
-            obj.name().unwrap_or("Unknown"),
+            obj.name(level.header.game_style).unwrap_or("Unknown"),
+            obj.id,
+            obj.flag,
         )
     }
 
     println!("Subworld objects: {}", level.subworld.objects.len());
     for obj in &level.subworld.objects {
         println!(
-            "    {},{}: {}",
+            "    {},{}: {} {} {:#x}",
             obj.x,
             obj.y,
-            obj.name().unwrap_or("Unknown"),
+            obj.name(level.header.game_style).unwrap_or("Unknown"),
+            obj.id,
+            obj.flag,
         )
     }
 }
