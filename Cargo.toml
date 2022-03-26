@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 aes = "0.8"
+anyhow = "1.0"
 bytemuck = "1.8"
 byteorder = "1.4"
 cbc = "0.1"
@@ -15,5 +16,4 @@ generic-array = "0.14"
 reqwest = "0.11"
 
 [dev-dependencies]
-anyhow = "1.0"
-tokio = { version = "1.17", features = ["rt", "macros", "fs", "rt-multi-thread"] }
+tokio = { version = "1.17", features = ["full"] }
