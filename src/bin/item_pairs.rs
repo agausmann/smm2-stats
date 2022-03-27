@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{HashMap, HashSet},
     env::args_os,
     fs::{self, read_dir, DirEntry, File},
     io::{self, Cursor, Write},
@@ -14,7 +14,7 @@ fn main() -> anyhow::Result<()> {
     let input_dir = args.next().unwrap_or_else(usage);
     let output_path = args.next();
 
-    let mut totals: BTreeMap<(&str, &str), u64> = BTreeMap::new();
+    let mut totals: HashMap<(&str, &str), u64> = HashMap::new();
 
     for entry_result in read_dir(input_dir).context("cannot read input dir")? {
         match handle_entry(entry_result) {
@@ -43,6 +43,9 @@ fn main() -> anyhow::Result<()> {
             }
         }
     }
+
+    let mut totals: Vec<_> = totals.into_iter().collect();
+    totals.sort();
 
     if let Some(output_path) = output_path {
         let mut output_file = File::create(output_path).context("cannot create output file")?;
