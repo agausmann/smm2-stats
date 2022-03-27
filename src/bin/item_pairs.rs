@@ -26,9 +26,12 @@ fn main() -> anyhow::Result<()> {
                     .flat_map(|obj| obj.name(level.header.game_style))
                     .collect();
 
+                for &item in &items {
+                    *totals.entry((item, item)).or_insert(0) += 1;
+                }
                 for &item_a in &items {
                     for &item_b in &items {
-                        if item_a <= item_b {
+                        if item_a != item_b {
                             *totals.entry((item_a, item_b)).or_insert(0) += 1;
                         }
                     }
