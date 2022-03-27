@@ -1,4 +1,5 @@
 use reqwest::{Client, Error};
+use serde::{Deserialize, Serialize};
 
 pub const OFFICIAL_BASE_URL: &str = "https://tgrcode.com/mm2";
 
@@ -25,10 +26,61 @@ impl Api {
         let bytes = response.bytes().await?;
         Ok(bytes.as_ref().to_vec())
     }
+
+    pub async fn search_endless_mode(
+        &self,
+        count: u16,
+        difficulty: Difficulty,
+    ) -> Result<Vec<Course>, Error> {
+        let response = self
+            .client
+            .get(format!(
+                "{}/search_endless_mode?count={}&difficulty={}",
+                self.base_url,
+                count,
+                difficulty.api_str()
+            ))
+            .send()
+            .await?
+            .error_for_status()?;
+        let parsed: SearchEndlessMode = response.json().await?;
+        Ok(parsed.courses)
+    }
 }
 
 impl Default for Api {
     fn default() -> Self {
         Self::new(OFFICIAL_BASE_URL.into())
     }
+}
+
+pub enum Difficulty {
+    Easy,
+    Normal,
+    Expert,
+    SuperExpert,
+}
+
+impl Difficulty {
+    fn api_str(&self) -> &'static str {
+        match self {
+            Difficulty::Easy => "e",
+            Difficulty::Normal => "n",
+            Difficulty::Expert => "ex",
+            Difficulty::SuperExpert => "sex",
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct SearchEndlessMode {
+    courses: Vec<Course>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct Course {
+    pub name: String,
+    pub description: String,
+    pub course_id: String,
 }
