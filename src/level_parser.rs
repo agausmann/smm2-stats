@@ -599,16 +599,9 @@ impl Level {
         let start = reader.stream_position()?;
         let header = LevelHeader::parse(reader)?;
         reader.seek(SeekFrom::Start(start + 0x200))?;
-        let overworld = Map::parse(
-            reader,
-            MapType::Overworld {
-                start_y: header.start_y,
-                goal_x: header.goal_x,
-                goal_y: header.goal_y,
-            },
-        )?;
+        let overworld = Map::parse(reader)?;
         reader.seek(SeekFrom::Start(start + 0x2e0e0))?;
-        let subworld = Map::parse(reader, MapType::Subworld)?;
+        let subworld = Map::parse(reader)?;
 
         Ok(Self {
             header,
@@ -618,38 +611,21 @@ impl Level {
     }
 }
 
-enum MapType {
-    Overworld {
-        start_y: u8,
-        goal_x: i16,
-        goal_y: u8,
-    },
-    Subworld,
-}
-
 pub struct Map {
     pub map_header: MapHeader,
     pub clear_pipes: Vec<MapClearPipe>,
     pub snake_blocks: Vec<MapSnakeBlock>,
-    pub track_y_points: Vec<Point>,
-    pub track_nodes: Vec<Vec<u32>>,
-    pub ground_nodes: Vec<Vec<u32>>,
     pub move_blocks: Vec<MapMoveBlock>,
     pub track_blocks: Vec<MapMoveBlock>,
     pub creepers: Vec<MapCreeper>,
-    pub object_link_type: Vec<u8>,
     pub objects: Vec<MapObject>,
     pub ground: Vec<MapGround>,
     pub ice: Vec<MapGround>,
     pub tracks: Vec<MapTrack>,
-    pub tile_loc: Vec<Vec<Point>>,
-    pub pipe_loc: Vec<Vec<Point>>,
-    pub ground_loc: Vec<Point>,
-    pub obj_loc_data: Vec<Vec<Vec<ObjStr>>>,
 }
 
 impl Map {
-    fn parse<R: Read + Seek>(reader: &mut R, map_type: MapType) -> io::Result<Self> {
+    fn parse<R: Read + Seek>(reader: &mut R) -> io::Result<Self> {
         let start = reader.stream_position()?;
 
         let map_header = MapHeader::parse(reader)?;
@@ -692,105 +668,15 @@ impl Map {
         }
 
         let mut ground = Vec::with_capacity(map_header.ground_count as usize);
-        let mut ground_nodes = vec![vec![0; 300]; 300];
         for i in 0..map_header.ground_count as u64 {
             reader.seek(SeekFrom::Start(start + 0x247a4 + 0x4 * i))?;
-            let a_ground = MapGround::parse(reader)?;
-            ground_nodes[a_ground.x as usize + 1][a_ground.y as usize + 1] = 1;
-            ground.push(a_ground);
-        }
-
-        if let MapType::Overworld {
-            start_y,
-            goal_x,
-            goal_y,
-        } = map_type
-        {
-            let min = ((goal_x as f32 - 5.0) / 10.0).round() as usize;
-            let max = ((goal_x as f32 - 5.0) / 10.0 + 9.0) as usize;
-            for j in min..=max {
-                for i in 0..goal_y as usize {
-                    ground_nodes[j + 1][i + 1] = 1;
-                }
-            }
-            for j in 0..=6 {
-                for i in 0..start_y as usize {
-                    ground_nodes[j + 1][i + 1] = 1;
-                }
-            }
+            ground.push(MapGround::parse(reader)?);
         }
 
         let mut tracks = Vec::with_capacity(map_header.track_count as usize);
-        let mut track_nodes =
-            vec![vec![0; map_header.b_or_t as usize + 3]; map_header.b_or_r as usize + 3];
-
         for i in 0..map_header.track_count as u64 {
             reader.seek(SeekFrom::Start(start + 0x28624 + 0x0 + 0xc * i))?;
-            let track = MapTrack::parse(reader)?;
-
-            let x = track.x as usize;
-            let y = track.y as usize;
-            match track.type_ {
-                0 => {
-                    track_nodes[x][y + 1] += 1;
-                    track_nodes[x + 2][y + 1] += 1;
-                }
-                1 => {
-                    track_nodes[x + 1][y + 2] += 1;
-                    track_nodes[x + 1][y] += 1;
-                }
-                2 | 4 | 5 => {
-                    track_nodes[x][y + 2] += 1;
-                    track_nodes[x + 2][y] += 1;
-                }
-                3 | 6 | 7 => {
-                    track_nodes[x + 2][y + 2] += 1;
-                    track_nodes[x][y] += 1;
-                }
-                8 => {
-                    track_nodes[x][y + 2] += 1;
-                    track_nodes[x + 4][y] += 1;
-                    track_nodes[x + 4][y + 4] += 1;
-                }
-                9 => {
-                    track_nodes[x][y] += 1;
-                    track_nodes[x][y + 4] += 1;
-                    track_nodes[x + 4][y + 2] += 1;
-                }
-                10 => {
-                    track_nodes[x][y] += 1;
-                    track_nodes[x + 2][y + 4] += 1;
-                    track_nodes[x + 4][y] += 1;
-                }
-                11 => {
-                    track_nodes[x + 2][y] += 1;
-                    track_nodes[x][y + 4] += 1;
-                    track_nodes[x + 4][y + 4] += 1;
-                }
-                12 => {
-                    track_nodes[x][y + 2] += 1;
-                    track_nodes[x + 4][y] += 1;
-                    track_nodes[x + 4][y + 4] += 1;
-                }
-                13 => {
-                    track_nodes[x][y] += 1;
-                    track_nodes[x][y + 4] += 1;
-                    track_nodes[x + 4][y + 2] += 1;
-                }
-                14 => {
-                    track_nodes[x][y] += 1;
-                    track_nodes[x + 4][y] += 1;
-                    track_nodes[x + 2][y + 4] += 1;
-                }
-                15 => {
-                    track_nodes[x + 2][y] += 1;
-                    track_nodes[x][y + 4] += 1;
-                    track_nodes[x + 4][y + 4] += 1;
-                }
-                _ => {}
-            }
-
-            tracks.push(track);
+            tracks.push(MapTrack::parse(reader)?);
         }
 
         let mut ice = Vec::with_capacity(map_header.ice_count as usize);
@@ -803,21 +689,13 @@ impl Map {
             map_header,
             clear_pipes,
             snake_blocks,
-            track_y_points: vec![],
-            track_nodes,
-            ground_nodes,
             move_blocks,
             track_blocks,
             creepers,
-            object_link_type: vec![],
             objects,
             ground,
             ice,
             tracks,
-            tile_loc: vec![],
-            pipe_loc: vec![],
-            ground_loc: vec![],
-            obj_loc_data: vec![],
         })
     }
 }
