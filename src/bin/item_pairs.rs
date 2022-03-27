@@ -1,8 +1,8 @@
 use std::{
     collections::{BTreeMap, HashSet},
     env::args_os,
-    fs::{self, read_dir, DirEntry},
-    io::{self, Cursor},
+    fs::{self, read_dir, DirEntry, File},
+    io::{self, Cursor, Write},
     process::exit,
 };
 
@@ -12,6 +12,7 @@ use smm2_stats::{course_decryptor, level_parser::Level};
 fn main() -> anyhow::Result<()> {
     let mut args = args_os().skip(1);
     let input_dir = args.next().unwrap_or_else(usage);
+    let output_path = args.next();
 
     let mut totals: BTreeMap<(&str, &str), u64> = BTreeMap::new();
 
@@ -43,8 +44,16 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    for ((a, b), count) in totals {
-        println!("{},{},{}", a, b, count);
+    if let Some(output_path) = output_path {
+        let mut output_file = File::create(output_path).context("cannot create output file")?;
+        for ((a, b), count) in totals {
+            writeln!(output_file, "{},{},{}", a, b, count)
+                .context("cannot write to output file")?;
+        }
+    } else {
+        for ((a, b), count) in totals {
+            println!("{},{},{}", a, b, count);
+        }
     }
 
     Ok(())
