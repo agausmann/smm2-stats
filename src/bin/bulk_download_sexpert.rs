@@ -1,6 +1,9 @@
 use std::{fmt::Display, future::Future, path::Path, time::Duration};
 
-use smm2_stats::mm2_api::{Api, Difficulty};
+use smm2_stats::{
+    course_decryptor::decrypt_course_data,
+    mm2_api::{Api, Difficulty},
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -16,7 +19,8 @@ async fn main() -> anyhow::Result<()> {
 
             println!("{} {}", course.course_id, course.name);
             let data = retry_backoff(|| api.get_level_data(&course.course_id)).await;
-            let write_result = tokio::fs::write(output_path, &data).await;
+            let decrypted_data = decrypt_course_data(&data);
+            let write_result = tokio::fs::write(output_path, &decrypted_data).await;
             match write_result {
                 Ok(()) => {}
                 Err(error) => {

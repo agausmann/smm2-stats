@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::Context;
-use smm2_stats::{course_decryptor, level_parser::Level};
+use smm2_stats::level_parser::Level;
 
 fn main() -> anyhow::Result<()> {
     let mut args = args_os().skip(1);
@@ -69,9 +69,8 @@ fn usage<T>() -> T {
 
 fn handle_entry(entry_result: io::Result<DirEntry>) -> anyhow::Result<Level> {
     let entry = entry_result.context("cannot read input dir")?;
-    let encrypted_data = fs::read(entry.path())
+    let level_data = fs::read(entry.path())
         .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
-    let level_data = course_decryptor::decrypt_course_data(&encrypted_data);
     let level = Level::parse(&mut Cursor::new(level_data))
         .with_context(|| format!("failed to parse level from {:?}", entry.file_name()))?;
     Ok(level)
