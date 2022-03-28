@@ -15,23 +15,25 @@ fn main() -> anyhow::Result<()> {
     let input_dir = args.next().unwrap_or_else(usage);
     let output_path = args.next();
 
-    let totals = read_dir(input_dir)
-        .context("cannot read input dir")?
-        .par_bridge()
-        .map(|entry_result| match entry_result {
-            Ok(x) => x,
-            Err(error) => {
-                eprintln!("cannot read input dir: {}", error);
-                exit(1);
+    let entries: Vec<_> = read_dir(input_dir)
+        .and_then(|iter| iter.collect())
+        .context("cannot read input dir")?;
+
+    let totals = entries
+        .par_chunks(256)
+        .map(|entries| {
+            let levels = entries.iter().flat_map(|entry| match handle_entry(entry) {
+                Ok(x) => Some(x),
+                Err(error) => {
+                    eprintln!("cannot read file: {}", error);
+                    None
+                }
+            });
+            let mut totals = HashMap::new();
+            for level in levels {
+                count_items(&mut totals, &level)
             }
-        })
-        .map(handle_entry)
-        .flat_map(|result| match result {
-            Ok(x) => Some(x),
-            Err(error) => {
-                eprintln!("cannot read input file: {}", error);
-                None
-            }
+            totals
         })
         .reduce(|| HashMap::new(), merge_totals);
 
@@ -60,14 +62,16 @@ fn usage<T>() -> T {
 
 type Totals = HashMap<(&'static str, &'static str), u64>;
 
-fn handle_entry(entry: DirEntry) -> anyhow::Result<Totals> {
+fn handle_entry(entry: &DirEntry) -> anyhow::Result<Level> {
     let encrypted_data = fs::read(entry.path())
         .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
     let level_data = course_decryptor::decrypt_course_data(&encrypted_data);
     let level = Level::parse(&mut Cursor::new(level_data))
         .with_context(|| format!("failed to parse level from {:?}", entry.file_name()))?;
+    Ok(level)
+}
 
-    let mut totals = HashMap::new();
+fn count_items(totals: &mut Totals, level: &Level) {
     let items: HashSet<&str> = level
         .overworld
         .objects
@@ -86,12 +90,11 @@ fn handle_entry(entry: DirEntry) -> anyhow::Result<Totals> {
             }
         }
     }
-    Ok(totals)
 }
 
-fn merge_totals(mut lhs: Totals, rhs: Totals) -> Totals {
-    for (key, count) in rhs {
-        *lhs.entry(key).or_insert(0) += count;
+fn merge_totals(lhs: Totals, mut rhs: Totals) -> Totals {
+    for (key, count) in lhs {
+        *rhs.entry(key).or_insert(0) += count;
     }
-    lhs
+    rhs
 }
