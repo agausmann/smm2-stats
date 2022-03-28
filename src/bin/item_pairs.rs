@@ -2,11 +2,12 @@ use std::{
     collections::{HashMap, HashSet},
     env::args_os,
     fs::{self, read_dir, DirEntry, File},
-    io::{self, Cursor, Write},
+    io::{Cursor, Write},
     process::exit,
 };
 
 use anyhow::Context;
+use rayon::prelude::*;
 use smm2_stats::{course_decryptor, level_parser::Level};
 
 fn main() -> anyhow::Result<()> {
@@ -14,35 +15,25 @@ fn main() -> anyhow::Result<()> {
     let input_dir = args.next().unwrap_or_else(usage);
     let output_path = args.next();
 
-    let mut totals: HashMap<(&str, &str), u64> = HashMap::new();
-
-    for entry_result in read_dir(input_dir).context("cannot read input dir")? {
-        match handle_entry(entry_result) {
-            Ok(level) => {
-                let items: HashSet<&str> = level
-                    .overworld
-                    .objects
-                    .iter()
-                    .chain(&level.subworld.objects)
-                    .flat_map(|obj| obj.name(level.header.game_style))
-                    .collect();
-
-                for &item in &items {
-                    *totals.entry((item, item)).or_insert(0) += 1;
-                }
-                for &item_a in &items {
-                    for &item_b in &items {
-                        if item_a != item_b {
-                            *totals.entry((item_a, item_b)).or_insert(0) += 1;
-                        }
-                    }
-                }
-            }
+    let totals = read_dir(input_dir)
+        .context("cannot read input dir")?
+        .par_bridge()
+        .map(|entry_result| match entry_result {
+            Ok(x) => x,
             Err(error) => {
-                eprintln!("{:#?}", error);
+                eprintln!("cannot read input dir: {}", error);
+                exit(1);
             }
-        }
-    }
+        })
+        .map(handle_entry)
+        .flat_map(|result| match result {
+            Ok(x) => Some(x),
+            Err(error) => {
+                eprintln!("cannot read input file: {}", error);
+                None
+            }
+        })
+        .reduce(|| HashMap::new(), merge_totals);
 
     let mut totals: Vec<_> = totals.into_iter().collect();
     totals.sort();
@@ -67,12 +58,40 @@ fn usage<T>() -> T {
     exit(1);
 }
 
-fn handle_entry(entry_result: io::Result<DirEntry>) -> anyhow::Result<Level> {
-    let entry = entry_result.context("cannot read input dir")?;
+type Totals = HashMap<(&'static str, &'static str), u64>;
+
+fn handle_entry(entry: DirEntry) -> anyhow::Result<Totals> {
     let encrypted_data = fs::read(entry.path())
         .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
     let level_data = course_decryptor::decrypt_course_data(&encrypted_data);
     let level = Level::parse(&mut Cursor::new(level_data))
         .with_context(|| format!("failed to parse level from {:?}", entry.file_name()))?;
-    Ok(level)
+
+    let mut totals = HashMap::new();
+    let items: HashSet<&str> = level
+        .overworld
+        .objects
+        .iter()
+        .chain(&level.subworld.objects)
+        .flat_map(|obj| obj.name(level.header.game_style))
+        .collect();
+
+    for &item in &items {
+        *totals.entry((item, item)).or_insert(0) += 1;
+    }
+    for &item_a in &items {
+        for &item_b in &items {
+            if item_a != item_b {
+                *totals.entry((item_a, item_b)).or_insert(0) += 1;
+            }
+        }
+    }
+    Ok(totals)
+}
+
+fn merge_totals(mut lhs: Totals, rhs: Totals) -> Totals {
+    for (key, count) in rhs {
+        *lhs.entry(key).or_insert(0) += count;
+    }
+    lhs
 }
