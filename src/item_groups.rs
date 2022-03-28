@@ -7,6 +7,6 @@ pub fn get_group(s: &str) -> Vec<&str> {
             "Super Acorn",
             "Boomerang Flower",
         ],
-        _ => s.split(",").collect(),
+        _ => s.split([',', '/'].as_slice()).collect(),
     }
 }
