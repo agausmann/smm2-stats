@@ -2,8 +2,9 @@ use std::{
     collections::{HashMap, HashSet},
     env::args_os,
     fs::{self, read_dir, DirEntry, File},
-    io::{self, Cursor, Write},
+    io::{Cursor, Write},
     process::exit,
+    time::Instant,
 };
 
 use anyhow::Context;
@@ -14,10 +15,15 @@ fn main() -> anyhow::Result<()> {
     let input_dir = args.next().unwrap_or_else(usage);
     let output_path = args.next();
 
+    let start_time = Instant::now();
+
+    let entries: Vec<_> = read_dir(input_dir)
+        .and_then(|iter| iter.collect::<Result<_, _>>())
+        .context("cannot read input dir")?;
     let mut totals: HashMap<(&str, &str), u64> = HashMap::new();
 
-    for entry_result in read_dir(input_dir).context("cannot read input dir")? {
-        match handle_entry(entry_result) {
+    for entry in &entries {
+        match handle_entry(entry) {
             Ok(level) => {
                 let items: HashSet<&str> = level
                     .overworld
@@ -46,6 +52,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut totals: Vec<_> = totals.into_iter().collect();
     totals.sort();
+    let finish_time = Instant::now();
 
     if let Some(output_path) = output_path {
         let mut output_file = File::create(output_path).context("cannot create output file")?;
@@ -59,6 +66,13 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
+    let elapsed = (finish_time - start_time).as_secs_f32();
+    eprintln!(
+        "took {:.3} seconds ({:.1} per second)",
+        elapsed,
+        entries.len() as f32 / elapsed
+    );
+
     Ok(())
 }
 
@@ -67,8 +81,7 @@ fn usage<T>() -> T {
     exit(1);
 }
 
-fn handle_entry(entry_result: io::Result<DirEntry>) -> anyhow::Result<Level> {
-    let entry = entry_result.context("cannot read input dir")?;
+fn handle_entry(entry: &DirEntry) -> anyhow::Result<Level> {
     let level_data = fs::read(entry.path())
         .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
     let level = Level::parse(&mut Cursor::new(level_data))
