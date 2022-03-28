@@ -68,7 +68,7 @@ fn main() -> anyhow::Result<()> {
         .iter()
         .flat_map(|&item| pairs.get(&(item.into(), item.into())))
         .sum::<u64>();
-    let both = items_a
+    let a_before_b = items_a
         .iter()
         .flat_map(|&item_a| {
             items_b
@@ -76,22 +76,30 @@ fn main() -> anyhow::Result<()> {
                 .flat_map(|&item_b| pairs.get(&(item_a.into(), item_b.into())))
         })
         .sum::<u64>();
+    let b_before_a = items_a
+        .iter()
+        .flat_map(|&item_a| {
+            items_b
+                .iter()
+                .flat_map(|&item_b| pairs.get(&(item_b.into(), item_a.into())))
+        })
+        .sum::<u64>();
 
-    let only_a = all_a - both;
-    let only_b = all_b - both;
-    let total = only_a + only_b;
+    let a_wins = all_a - b_before_a;
+    let b_wins = all_b - a_before_b;
+    let total = a_wins + b_wins;
 
-    println!("{} {} {}", all_a, both, all_b);
+    println!("{} {} {} {}", all_a, a_before_b, b_before_a, all_b);
 
     println!(
         "{}: {:.1}%",
         group_a,
-        100.0 * (only_a as f32) / (total as f32)
+        100.0 * (a_wins as f32) / (total as f32)
     );
     println!(
         "{}: {:.1}%",
         group_b,
-        100.0 * (only_b as f32) / (total as f32)
+        100.0 * (b_wins as f32) / (total as f32)
     );
 
     Ok(())

@@ -1,8 +1,9 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     env::args_os,
-    fs::{self, read_dir, DirEntry, File},
+    fs::{self, read_dir, File},
     io::{Cursor, Write},
+    path::Path,
     process::exit,
     time::Instant,
 };
@@ -23,29 +24,35 @@ fn main() -> anyhow::Result<()> {
     let mut totals: HashMap<(&str, &str), u64> = HashMap::new();
 
     for entry in &entries {
-        match handle_entry(entry) {
-            Ok(level) => {
-                let items: HashSet<&str> = level
-                    .overworld
-                    .objects
-                    .iter()
-                    .chain(&level.subworld.objects)
-                    .flat_map(|obj| obj.name(level.header.game_style))
-                    .collect();
-
-                for &item in &items {
-                    *totals.entry((item, item)).or_insert(0) += 1;
-                }
-                for &item_a in &items {
-                    for &item_b in &items {
-                        if item_a != item_b {
-                            *totals.entry((item_a, item_b)).or_insert(0) += 1;
-                        }
-                    }
-                }
-            }
+        let level = match load_level(&entry.path()) {
+            Ok(x) => x,
             Err(error) => {
                 eprintln!("{:#?}", error);
+                continue;
+            }
+        };
+        let mut item_positions: HashMap<&str, i32> = HashMap::new();
+
+        for object in level
+            .overworld
+            .objects
+            .iter()
+            .chain(&level.subworld.objects)
+        {
+            if let Some(name) = object.name(level.header.game_style) {
+                let slot = item_positions.entry(name).or_insert(i32::MAX);
+                *slot = object.x.min(*slot);
+            }
+        }
+
+        for &item in item_positions.keys() {
+            *totals.entry((item, item)).or_insert(0) += 1;
+        }
+        for (&a, &ax) in item_positions.iter() {
+            for (&b, &bx) in item_positions.iter() {
+                if a != b && ax <= bx {
+                    *totals.entry((a, b)).or_insert(0) += 1;
+                }
             }
         }
     }
@@ -81,10 +88,10 @@ fn usage<T>() -> T {
     exit(1);
 }
 
-fn handle_entry(entry: &DirEntry) -> anyhow::Result<Level> {
-    let level_data = fs::read(entry.path())
-        .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
+fn load_level(path: &Path) -> anyhow::Result<Level> {
+    let level_data =
+        fs::read(path).with_context(|| format!("cannot read input file {:?}", path))?;
     let level = Level::parse(&mut Cursor::new(level_data))
-        .with_context(|| format!("failed to parse level from {:?}", entry.file_name()))?;
+        .with_context(|| format!("failed to parse level from {:?}", path))?;
     Ok(level)
 }
