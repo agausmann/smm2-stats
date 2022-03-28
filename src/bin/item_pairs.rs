@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     env::args_os,
     fs::{self, read_dir, DirEntry, File},
+    hash::{Hash, Hasher},
     io::{Cursor, Write},
     process::exit,
     time::Instant,
@@ -9,6 +10,23 @@ use std::{
 
 use anyhow::Context;
 use smm2_stats::level_parser::Level;
+
+#[derive(Clone, Copy)]
+struct PtrEq(&'static str);
+
+impl PartialEq for PtrEq {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.0 as *const str == rhs.0 as *const str
+    }
+}
+
+impl Eq for PtrEq {}
+
+impl Hash for PtrEq {
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        (self.0 as *const str).hash(hasher)
+    }
+}
 
 fn main() -> anyhow::Result<()> {
     let mut args = args_os().skip(1);
@@ -20,17 +38,17 @@ fn main() -> anyhow::Result<()> {
     let entries: Vec<_> = read_dir(input_dir)
         .and_then(|iter| iter.collect::<Result<_, _>>())
         .context("cannot read input dir")?;
-    let mut totals: HashMap<(&str, &str), u64> = HashMap::new();
+    let mut totals: HashMap<(PtrEq, PtrEq), u64> = HashMap::new();
 
     for entry in &entries {
         match handle_entry(entry) {
             Ok(level) => {
-                let items: HashSet<&str> = level
+                let items: HashSet<PtrEq> = level
                     .overworld
                     .objects
                     .iter()
                     .chain(&level.subworld.objects)
-                    .flat_map(|obj| obj.name(level.header.game_style))
+                    .flat_map(|obj| obj.name(level.header.game_style).map(PtrEq))
                     .collect();
 
                 for &item in &items {
@@ -50,7 +68,10 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    let mut totals: Vec<_> = totals.into_iter().collect();
+    let mut totals: Vec<_> = totals
+        .into_iter()
+        .map(|((a, b), count)| ((a.0, b.0), count))
+        .collect();
     totals.sort();
     let finish_time = Instant::now();
 
