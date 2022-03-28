@@ -14,6 +14,7 @@ pub fn get_group(s: &str) -> Vec<&str> {
             "Super Acorn",
             "Boomerang Flower",
         ],
+        "Style Ride" => vec!["Shoe Goomba", "Yoshi"],
         _ => s.split([',', '/'].as_slice()).collect(),
     }
 }
