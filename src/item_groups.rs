@@ -1,6 +1,13 @@
 pub fn get_group(s: &str) -> Vec<&str> {
     match s {
-        "Update 2 Powerup" => vec![
+        "Style Powerup 1" => vec![
+            "Big Mushroom",
+            "Super Leaf",
+            "Cape Feather",
+            "Propeller Mushroom",
+            "Super Bell",
+        ],
+        "Style Powerup 2" | "Update 2 Powerup" => vec![
             "SMB2 Mushroom",
             "Frog Suit",
             "Power Balloon",
