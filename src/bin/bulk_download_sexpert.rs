@@ -5,12 +5,24 @@ use smm2_stats::mm2_api::{Api, Difficulty};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let api = Api::default();
+    let base_dir = Path::new("levels/sexpert/");
     loop {
         let courses = retry_backoff(|| api.search_endless_mode(300, Difficulty::SuperExpert)).await;
         for course in courses {
+            let output_path = base_dir.join(&course.course_id);
+            if output_path.exists() {
+                continue;
+            }
+
             println!("{} {}", course.course_id, course.name);
             let data = retry_backoff(|| api.get_level_data(&course.course_id)).await;
-            tokio::fs::write(Path::new("levels/sexpert/").join(&course.course_id), &data).await?;
+            let write_result = tokio::fs::write(output_path, &data).await;
+            match write_result {
+                Ok(()) => {}
+                Err(error) => {
+                    eprintln!("write failed: {}", error);
+                }
+            }
         }
     }
 }
