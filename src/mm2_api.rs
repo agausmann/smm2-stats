@@ -1,4 +1,6 @@
-use reqwest::{Client, Error};
+use std::time::Duration;
+
+use reqwest::{Client, ClientBuilder, Error};
 use serde::{Deserialize, Serialize};
 
 pub const OFFICIAL_BASE_URL: &str = "https://tgrcode.com/mm2";
@@ -9,11 +11,17 @@ pub struct Api {
 }
 
 impl Api {
-    pub fn new(base_url: String) -> Self {
-        Self {
-            client: Client::new(),
+    pub fn new(base_url: String) -> Result<Self, Error> {
+        Ok(Self {
+            client: ClientBuilder::new()
+                .timeout(Duration::from_secs(120))
+                .build()?,
             base_url,
-        }
+        })
+    }
+
+    pub fn official_server() -> Result<Self, Error> {
+        Self::new(OFFICIAL_BASE_URL.into())
     }
 
     pub async fn get_level_data(&self, course_id: &str) -> Result<Vec<u8>, Error> {
@@ -45,12 +53,6 @@ impl Api {
             .error_for_status()?;
         let parsed: SearchEndlessMode = response.json().await?;
         Ok(parsed.courses)
-    }
-}
-
-impl Default for Api {
-    fn default() -> Self {
-        Self::new(OFFICIAL_BASE_URL.into())
     }
 }
 

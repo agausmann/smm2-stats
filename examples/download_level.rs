@@ -6,7 +6,7 @@ async fn main() -> anyhow::Result<()> {
     let course_id = args.next().expect("missing argument [course id]");
     let outfile = args.next().unwrap_or_else(|| course_id.clone());
 
-    let api = Api::default();
+    let api = Api::official_server()?;
     let level_data = api.get_level_data(&course_id).await?;
     tokio::fs::write(outfile, level_data).await?;
     Ok(())

@@ -7,7 +7,7 @@ use smm2_stats::{
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let api = Api::default();
+    let api = Api::official_server()?;
     let base_dir = Path::new("levels/sexpert/");
     loop {
         let courses = retry_backoff(|| api.search_endless_mode(300, Difficulty::SuperExpert)).await;
