@@ -83,18 +83,18 @@ fn main() -> anyhow::Result<()> {
 
     println!("{} {} {}", all_a, both, all_b);
 
-    println!(
-        "{}: {:.1} - {:.1}%",
-        group_a,
-        100.0 * (only_a as f32) / (total as f32),
-        100.0 * (all_a as f32) / (total as f32),
-    );
-    println!(
-        "{}: {:.1} - {:.1}%",
-        group_b,
-        100.0 * (only_b as f32) / (total as f32),
-        100.0 * (all_b as f32) / (total as f32),
-    );
+    let a_low = 100.0 * (only_a as f32) / (total as f32);
+    let a_high = 100.0 * (all_a as f32) / (total as f32);
+    let a_mean = (a_low + a_high) / 2.0;
+    let a_var = (a_high - a_low) / 2.0;
+
+    let b_low = 100.0 * (only_b as f32) / (total as f32);
+    let b_high = 100.0 * (all_b as f32) / (total as f32);
+    let b_mean = (b_low + b_high) / 2.0;
+    let b_var = (b_high - b_low) / 2.0;
+
+    println!("{}: {:.1} +-{:.1}%", group_a, a_mean, a_var);
+    println!("{}: {:.1} +-{:.1}%", group_b, b_mean, b_var);
 
     Ok(())
 }
