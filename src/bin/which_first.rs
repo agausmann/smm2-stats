@@ -79,19 +79,21 @@ fn main() -> anyhow::Result<()> {
 
     let only_a = all_a - both;
     let only_b = all_b - both;
-    let total = only_a + only_b;
+    let total = only_a + only_b + both;
 
     println!("{} {} {}", all_a, both, all_b);
 
     println!(
-        "{}: {:.1}%",
+        "{}: {:.1} - {:.1}%",
         group_a,
-        100.0 * (only_a as f32) / (total as f32)
+        100.0 * (only_a as f32) / (total as f32),
+        100.0 * (all_a as f32) / (total as f32),
     );
     println!(
-        "{}: {:.1}%",
+        "{}: {:.1} - {:.1}%",
         group_b,
-        100.0 * (only_b as f32) / (total as f32)
+        100.0 * (only_b as f32) / (total as f32),
+        100.0 * (all_b as f32) / (total as f32),
     );
 
     Ok(())
