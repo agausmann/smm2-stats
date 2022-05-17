@@ -919,7 +919,20 @@ fn num_to_name(id: i16, flag: u32, game_style: u16) -> Option<&'static str> {
     let is_p_door = (flag & FLAG_IS_P_DOOR) != 0;
     let is_key_door = (flag & FLAG_IS_KEY_DOOR) != 0;
     match id {
-        0 => Some("Goomba"),
+        0 if !alt_item => match game_style {
+            GAME_STYLE_SMB1 | GAME_STYLE_SMB3 | GAME_STYLE_NSMBU | GAME_STYLE_SM3DW => {
+                Some("Goomba")
+            }
+            GAME_STYLE_SMW => Some("Galoomba"),
+            _ => None,
+        },
+        0 if alt_item => match game_style {
+            GAME_STYLE_SMB1 | GAME_STYLE_SMB3 | GAME_STYLE_NSMBU | GAME_STYLE_SM3DW => {
+                Some("Goombrat")
+            }
+            GAME_STYLE_SMW => Some("Goombud"),
+            _ => None,
+        },
         1 => Some("Koopa"),
         2 => Some("Piranha Plant"),
         3 => Some("Hammer Bro"),
