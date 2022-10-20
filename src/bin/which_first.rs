@@ -93,8 +93,8 @@ fn main() -> anyhow::Result<()> {
     let b_mean = (b_low + b_high) / 2.0;
     let b_var = (b_high - b_low) / 2.0;
 
-    println!("{}: {:.1} +-{:.1}%", group_a, a_mean, a_var);
-    println!("{}: {:.1} +-{:.1}%", group_b, b_mean, b_var);
+    println!("{}: {:.1} ±{:.1}%", group_a, a_mean, a_var);
+    println!("{}: {:.1} ±{:.1}%", group_b, b_mean, b_var);
 
     Ok(())
 }
