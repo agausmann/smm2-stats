@@ -12,8 +12,10 @@ bytemuck = "1.8"
 byteorder = "1.4"
 cbc = "0.1"
 cipher = { version = "0.4", features = ["alloc", "block-padding"] }
+flate2 = "1.0"
 generic-array = "0.14"
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tar = "0.4"
 tokio = { version = "1.17", features = ["full"] }
