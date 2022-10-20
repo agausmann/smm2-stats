@@ -61,11 +61,11 @@ both objects appear. We want to know which one is likely to be seen _first_, and
 the probability of that happening.
 
 The idea is this: Each level is an independent trial, where either object may
-win, or neither wins if neither are present. If only one of the object appears,
-that is considered a "win" (not entirely accurate; see [Caveats](#caveats)). If
-both objects appear in a level, that is considered a "toss-up". If neither
-object appears in a level, we can safely ignore it, because no "event" happens
-in that level.
+win, or neither wins if neither are present. If only one of the objects appears
+in the level, that is considered a "win" (not entirely accurate; see [Future
+Work](#future-work)). If both objects appear in a level, that is considered a
+"toss-up". If neither object appears in a level, we can safely ignore that
+level, because no "event" happens in that level.
 
 The probabilities can then be approximated by taking the "only one object"
 totals and summing them, and dividing each total by that sum. Every time an
@@ -113,13 +113,18 @@ I stopped using this program after a few months. I had little success overall, a
 and I started having a lot more fun again when I was betting on instinct.
 
 Despite that, it was (and still is) a fun experiment on the development side. I
-still occasionally develop and improve it.
+still occasionally extend and improve it, and it still provides useful
+information, though I only use it _after_ placing bets.
 
 ## Future work
 
-- Accounting for the fact that some objects will never be seen when playing a level. (The actual bet is "Which object appears on-screen first" while the host plays levels. This is just a rough approximation of those odds.)
+- Accounting for the fact that some objects will never be seen when playing a
+  level. The actual bet is "Which object appears on-screen first?", while the
+  host plays random levels. The program currently checks simply if the level
+  contains the object, which is just a rough approximation of those odds.
 
-- Collecting data from the real-world bets to compare analytical/experimental outcomes.
+- Collecting data from the real-world bets to compare analytical/experimental
+  outcomes.
 
 ## Acknowledgements
 
