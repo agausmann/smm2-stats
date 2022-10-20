@@ -25,13 +25,18 @@ fn main() -> anyhow::Result<()> {
     for entry in &entries {
         match handle_entry(entry) {
             Ok(level) => {
-                let items: HashSet<&str> = level
+                let mut items: HashSet<&str> = level
                     .overworld
                     .objects
                     .iter()
                     .chain(&level.subworld.objects)
                     .flat_map(|obj| obj.name(level.header.game_style))
                     .collect();
+
+                // NOTE - Icicles are not in objects list:
+                if level.overworld.icicles.len() + level.subworld.icicles.len() > 0 {
+                    items.insert("Icicle");
+                }
 
                 for &item in &items {
                     *totals.entry((item, item)).or_insert(0) += 1;

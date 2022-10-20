@@ -189,7 +189,7 @@ pub struct MapHeader {
     pub track_block_count: u32,
     pub ground_count: u32,
     pub track_count: u32,
-    pub ice_count: u32,
+    pub icicle_count: u32,
 }
 
 impl MapHeader {
@@ -218,7 +218,7 @@ impl MapHeader {
         reader.seek(SeekFrom::Start(start + 0x3c))?;
         let ground_count = reader.read_u32()?;
         let track_count = reader.read_u32()?;
-        let ice_count = reader.read_u32()?;
+        let icicle_count = reader.read_u32()?;
 
         Ok(Self {
             theme,
@@ -243,7 +243,7 @@ impl MapHeader {
             track_block_count,
             ground_count,
             track_count,
-            ice_count,
+            icicle_count,
         })
     }
 
@@ -620,7 +620,7 @@ pub struct Map {
     pub creepers: Vec<MapCreeper>,
     pub objects: Vec<MapObject>,
     pub ground: Vec<MapGround>,
-    pub ice: Vec<MapGround>,
+    pub icicles: Vec<MapGround>,
     pub tracks: Vec<MapTrack>,
 }
 
@@ -679,10 +679,10 @@ impl Map {
             tracks.push(MapTrack::parse(reader)?);
         }
 
-        let mut ice = Vec::with_capacity(map_header.ice_count as usize);
-        for i in 0..map_header.ice_count as u64 {
+        let mut icicles = Vec::with_capacity(map_header.icicle_count as usize);
+        for i in 0..map_header.icicle_count as u64 {
             reader.seek(SeekFrom::Start(start + 0x2cc74 + 0x0 + 0x4 * i))?;
-            ice.push(MapGround::parse(reader)?);
+            icicles.push(MapGround::parse(reader)?);
         }
 
         Ok(Self {
@@ -694,7 +694,7 @@ impl Map {
             creepers,
             objects,
             ground,
-            ice,
+            icicles,
             tracks,
         })
     }
@@ -1073,7 +1073,7 @@ fn num_to_name(id: i16, flag: u32, game_style: u16) -> Option<&'static str> {
         //115 => Some("Cinobic"),
         116 => Some("Super Hammer"),
         117 => Some("Bully"),
-        118 => Some("Icicle"),
+        // 118 => Some("Icicle"),
         119 => Some("! Block"),
         120 => Some("Lemmy"),
         121 => Some("Morton"),
