@@ -17,14 +17,11 @@
 use std::{
     collections::{HashMap, HashSet},
     env::args_os,
-    fs::{self, read_dir, DirEntry},
-    io::Cursor,
     process::exit,
     time::Instant,
 };
 
-use anyhow::Context;
-use smm2_stats::level_parser::Level;
+use smm2_stats::{level_iter, level_parser::Level};
 
 fn level_filter(level: &Level) -> bool {
     level.overworld.icicles.len() + level.subworld.icicles.len() > 0
@@ -38,69 +35,59 @@ fn main() -> anyhow::Result<()> {
 
     let start_time = Instant::now();
 
-    let entries: Vec<_> = read_dir(input_dir)
-        .and_then(|iter| iter.collect::<Result<_, _>>())
-        .context("cannot read input dir")?;
     let mut item_counts: HashMap<i16, usize> = HashMap::new();
     let mut total_levels: usize = 0;
     let mut total_no: usize = 0;
 
-    for entry in &entries {
-        match handle_entry(entry) {
-            Ok(level) => {
-                let items: HashSet<_> = level
-                    .overworld
-                    .objects
-                    .iter()
-                    .chain(&level.subworld.objects)
-                    .map(|obj| obj.id)
-                    .collect();
+    level_iter::for_each_in(&input_dir, |level| {
+        let items: HashSet<_> = level
+            .overworld
+            .objects
+            .iter()
+            .chain(&level.subworld.objects)
+            .map(|obj| obj.id)
+            .collect();
 
-                if level_filter(&level) {
-                    for &item in &items {
-                        *item_counts.entry(item).or_insert(total_no) += 1;
-                    }
-                } else {
-                    for &item in &items {
-                        item_counts.entry(item).or_insert(total_no);
-                    }
-                    for (item, count) in item_counts.iter_mut() {
-                        if !items.contains(&item) {
-                            *count += 1;
-                        }
-                    }
-                    total_no += 1;
-                }
-
-                total_levels += 1;
-
-                if total_levels % 100 == 0 {
-                    let now = Instant::now();
-                    println!();
-                    println!(
-                        "n = {}, ({:.1}/s)",
-                        total_levels,
-                        total_levels as f32 / (now - start_time).as_secs_f32()
-                    );
-
-                    println!("Best matches:");
-                    let mut entries: Vec<_> = item_counts.iter().map(|(&k, &v)| (v, k)).collect();
-                    entries.sort();
-                    for (count, id) in entries.into_iter().rev().take(10) {
-                        println!(
-                            "{} ({:.1}%) id={}", // flag={:#08x}",
-                            count,
-                            count as f32 / total_levels as f32 * 100.0,
-                            id,
-                        );
-                    }
+        if level_filter(&level) {
+            for &item in &items {
+                *item_counts.entry(item).or_insert(total_no) += 1;
+            }
+        } else {
+            for &item in &items {
+                item_counts.entry(item).or_insert(total_no);
+            }
+            for (item, count) in item_counts.iter_mut() {
+                if !items.contains(&item) {
+                    *count += 1;
                 }
             }
-            Err(error) => {
-                eprintln!("{:#?}", error);
+            total_no += 1;
+        }
+
+        total_levels += 1;
+
+        if total_levels % 100 == 0 {
+            let now = Instant::now();
+            println!();
+            println!(
+                "n = {}, ({:.1}/s)",
+                total_levels,
+                total_levels as f32 / (now - start_time).as_secs_f32()
+            );
+
+            println!("Best matches:");
+            let mut entries: Vec<_> = item_counts.iter().map(|(&k, &v)| (v, k)).collect();
+            entries.sort();
+            for (count, id) in entries.into_iter().rev().take(10) {
+                println!(
+                    "{} ({:.1}%) id={}", // flag={:#08x}",
+                    count,
+                    count as f32 / total_levels as f32 * 100.0,
+                    id,
+                );
             }
         }
-    }
+    });
 
     let finish_time = Instant::now();
 
@@ -108,7 +95,7 @@ fn main() -> anyhow::Result<()> {
     eprintln!(
         "took {:.3} seconds ({:.1} per second)",
         elapsed,
-        entries.len() as f32 / elapsed
+        total_levels as f32 / elapsed
     );
 
     Ok(())
@@ -117,12 +104,4 @@ fn main() -> anyhow::Result<()> {
 fn usage<T>() -> T {
     eprintln!("usage: [levels-dir]");
     exit(1);
-}
-
-fn handle_entry(entry: &DirEntry) -> anyhow::Result<Level> {
-    let level_data = fs::read(entry.path())
-        .with_context(|| format!("cannot read input file {:?}", entry.file_name()))?;
-    let level = Level::parse(&mut Cursor::new(level_data))
-        .with_context(|| format!("failed to parse level from {:?}", entry.file_name()))?;
-    Ok(level)
 }
