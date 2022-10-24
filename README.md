@@ -122,7 +122,15 @@ information, though I only use it _after_ placing bets.
   level. The actual bet is "Which object appears on-screen first?", while the
   host plays random levels. The program currently checks simply if the level
   contains the object, which is just a rough approximation of those odds.
-
+  
+  This doesn't affect all objects equally; some are more likely to be easter 
+  eggs (like 1-Up and Star) that are in a hidden block or hidden room. It may
+  be possible to account for this in level analysis using weights to quantify
+  how likely it is for the player to encounter it on-screen. However, any such
+  algorithm would create even more variables that need to be tuned, and it's
+  hard to say whether such a model actually simulates real human behavior
+  accurately.
+  
 - Collecting data from the real-world bets to compare analytical/experimental
   outcomes.
 
