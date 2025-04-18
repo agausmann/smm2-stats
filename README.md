@@ -109,12 +109,13 @@ well. Very often, the side with the lower odds of winning would be under-bet
 compared to my odds. It's easy to overlook/overestimate the odds of actually
 winning, bet too much and have too little left when you lose.
 
-I stopped using this program after a few months. I had little success overall, and didn't really enjoy betting using it. When I stopped looking at the numbers
+I stopped using this program after a few months. I had little success overall,
+and didn't really enjoy betting using it. When I stopped looking at the numbers
 and I started having a lot more fun again when I was betting on instinct.
 
 Despite that, it was (and still is) a fun experiment on the development side. I
 still occasionally extend and improve it, and it still provides useful
-information, though I only use it _after_ placing bets.
+information, though currently I only use it _after_ placing bets.
 
 ## Future work
 
@@ -130,9 +131,22 @@ information, though I only use it _after_ placing bets.
   algorithm would create even more variables that need to be tuned, and it's
   hard to say whether such a model actually simulates real human behavior
   accurately.
+
+  Alternatively, try to automate the collection of real-world data using gameplay
+  footage. For some level types, it's possible to [use OpenCV to find tiles/sprites],
+  and probably OCR the level codes and signpost the "gameplay" parts of the
+  footage using similar techniques.
   
-- Collecting data from the real-world bets to compare analytical/experimental
-  outcomes.
+- Recording individual outcomes from the real-world bets to compare with the
+  estimated outcomes.
+
+- Automate calculation of the [Kelly criterion] to predetermine bet sizing.
+  In hindsight (some years later), this was likely a big flaw in my original
+  methodology. I did not perform any risk analysis and sized bets arbitrarily
+  based on gut feeling.
+
+- Try a much larger dataset - [TheGreatRambler's dataset][tgr mm2_levels]
+  contains over 3 million Super Expert levels.
 
 ## Acknowledgements
 
@@ -143,7 +157,14 @@ was based on [work by JiXiaomai][jixiaomai].
 
 I couldn't have achieved this without these incredible projects, so thank you!
 
+And of course, hats off to the [bald man (Aurateur)][aurateur] for suffering
+through Super Expert and hosting the predictions that inspired my research.
+
 [Channel Points Predictions]: https://help.twitch.tv/s/article/channel-points-predictions
+[use OpenCV to find tiles/sprites]: https://stackoverflow.com/a/35378944
+[Kelly criterion]: https://en.wikipedia.org/wiki/Kelly_criterion
+[tgr mm2_levels]: https://huggingface.co/datasets/TheGreatRambler/mm2_level
 [mariover]: https://github.com/TheGreatRambler/MariOver
 [toost]: https://github.com/TheGreatRambler/toost
 [jixiaomai]: https://github.com/JiXiaomai/SMM2LevelViewer
+[aurateur]: https://twitch.tv/aurateur
